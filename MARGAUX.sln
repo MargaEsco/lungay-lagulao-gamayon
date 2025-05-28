@@ -1,25 +1,247 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.13.35818.85 d17.13
-MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MARGAUX", "MARGAUX\MARGAUX.csproj", "{E1E38C08-BD50-4650-934F-AE23C7F83D3E}"
-EndProject
-Global
-	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
-		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{E1E38C08-BD50-4650-934F-AE23C7F83D3E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E1E38C08-BD50-4650-934F-AE23C7F83D3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E1E38C08-BD50-4650-934F-AE23C7F83D3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E1E38C08-BD50-4650-934F-AE23C7F83D3E}.Release|Any CPU.Build.0 = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {DDF575D3-8D3D-413D-81B4-F50C7277845A}
-	EndGlobalSection
-EndGlobal
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+
+    namespace MARGAUX
+    {
+        class Expense
+        {
+            public int Id { get; set; }
+            public string Category { get; set; }
+            public decimal Amount { get; set; }
+        }
+
+        class User
+        {
+            public string Username { get; set; }
+            public string Password { get; set; }
+        }
+
+        class UserManager
+        {
+            private List<User> users = new List<User>();
+
+            public void Register(string username, string password)
+            {
+                if (users.Exists(u => u.Username == username))
+                {
+                    Console.WriteLine("Username already exists. Please choose a different username.");
+                    return;
+                }
+
+                users.Add(new User { Username = username, Password = password });
+                Console.WriteLine("Registration successful.");
+            }
+
+            public bool Login(string username, string password)
+            {
+                return users.Exists(u => u.Username == username && u.Password == password);
+            }
+        }
+
+        class BudgetTracker
+        {
+            private Expense[] expenses = new Expense[100];
+            private int count = 0;
+
+            public void AddExpense()
+            {
+                if (count >= expenses.Length)
+                {
+                    Console.WriteLine("Storage full. Cannot add more expenses.");
+                    return;
+                }
+
+                Expense newExpense = new Expense();
+                newExpense.Id = count + 1;
+
+                Console.Write("Enter category: ");
+                newExpense.Category = Console.ReadLine();
+
+                Console.Write("Enter amount: ");
+                if (decimal.TryParse(Console.ReadLine(), out decimal amount))
+                {
+                    newExpense.Amount = amount;
+                    expenses[count++] = newExpense;
+                    Console.WriteLine("Expense added successfully.\n");
+                }
+                else
+                {
+                    Console.WriteLine("Invalid amount.\n");
+                }
+            }
+
+            public void ViewExpenses()
+            {
+                Console.WriteLine("\n=== Expense Records ===");
+                Console.WriteLine("{0,-5} {1,-20} {2,-10}", "ID", "Category", "Amount");
+                Console.WriteLine(new string('-', 40));
+
+                for (int i = 0; i < count; i++)
+                {
+                    Console.WriteLine("{0,-5} {1,-20} {2,-10:C}", expenses[i].Id, expenses[i].Category, expenses[i].Amount);
+                }
+
+                Console.WriteLine();
+            }
+
+            public void UpdateExpense()
+            {
+                Console.Write("Enter ID of expense to update: ");
+                if (int.TryParse(Console.ReadLine(), out int id))
+                {
+                    int index = FindIndexById(id);
+                    if (index != -1)
+                    {
+                        Console.Write("Enter new category: ");
+                        expenses[index].Category = Console.ReadLine();
+
+                        Console.Write("Enter new amount: ");
+                        if (decimal.TryParse(Console.ReadLine(), out decimal amount))
+                        {
+                            expenses[index].Amount = amount;
+                            Console.WriteLine("Expense updated successfully.\n");
+                        }
+                        else
+                        {
+                            Console.WriteLine("Invalid amount.\n");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Expense ID not found.\n");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Invalid ID.\n");
+                }
+            }
+
+            public void DeleteExpense()
+            {
+                Console.Write("Enter ID of expense to delete: ");
+                if (int.TryParse(Console.ReadLine(), out int id))
+                {
+                    int index = FindIndexById(id);
+                    if (index != -1)
+                    {
+
+                        for (int i = index; i < count - 1; i++)
+                        {
+                            expenses[i] = expenses[i + 1];
+                            expenses[i].Id = i + 1;
+                        }
+
+                        expenses[--count] = null;
+
+                        Console.WriteLine("Expense deleted and reindexed.\n");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Expense ID not found.\n");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Invalid ID.\n");
+                }
+            }
+
+            private int FindIndexById(int id)
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    if (expenses[i].Id == id)
+                        return i;
+                }
+                return -1;
+            }
+        }
+
+        class Program
+        {
+            static void Main(string[] args)
+            {
+                UserManager userManager = new UserManager();
+                BudgetTracker tracker = new BudgetTracker();
+                bool isLoggedIn = false;
+
+                while (!isLoggedIn)
+                {
+                    Console.WriteLine("1. Register");
+                    Console.WriteLine("2. Login");
+                    Console.Write("Choose an option: ");
+                    string choice = Console.ReadLine();
+
+                    if (choice == "1")
+                    {
+                        Console.Write("Enter username: ");
+                        string username = Console.ReadLine();
+                        Console.Write("Enter password: ");
+                        string password = Console.ReadLine();
+                        userManager.Register(username, password);
+                    }
+                    else if (choice == "2")
+                    {
+                        Console.Write("Enter username: ");
+                        string username = Console.ReadLine();
+                        Console.Write("Enter password: ");
+                        string password = Console.ReadLine();
+                        isLoggedIn = userManager.Login(username, password);
+                        if (isLoggedIn)
+                        {
+                            Console.WriteLine("Login successful.\n");
+                        }
+                        else
+                        {
+                            Console.WriteLine("Invalid username or password.\n");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Invalid option. Please try again.");
+                    }
+                }
+
+
+                while (true)
+                {
+                    Console.WriteLine("1. Add Expense");
+                    Console.WriteLine("2. View Expenses");
+                    Console.WriteLine("3. Update Expense");
+                    Console.WriteLine("4. Delete Expense");
+                    Console.WriteLine("5. Logout");
+                    Console.Write("Choose an option: ");
+                    string option = Console.ReadLine();
+
+                    switch (option)
+                    {
+                        case "1":
+                            tracker.AddExpense();
+                            break;
+                        case "2":
+                            tracker.ViewExpenses();
+                            break;
+                        case "3":
+                            tracker.UpdateExpense();
+                            break;
+                        case "4":
+                            tracker.DeleteExpense();
+                            break;
+                        case "5":
+                            isLoggedIn = false;
+                            Console.WriteLine("Logged out successfully.");
+                            return;
+                        default:
+                            Console.WriteLine("Invalid option. Please try again.");
+                            break;
+                    }
+                }
+            }
+        }
+    }
+
